@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Faktura xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns="http://crd.gov.pl/wzor/2025/06/25/13775/">
+    <Naglowek>
+        <KodFormularza kodSystemowy="FA (3)" wersjaSchemy="1-0E">FA</KodFormularza>
+        <WariantFormularza>3</WariantFormularza>
+        <DataWytworzeniaFa>2025-11-24T11:11:51.792711Z</DataWytworzeniaFa>
+        <SystemInfo>Aplikacja Podatnika KSeF</SystemInfo>
+    </Naglowek>
+    <Podmiot1>
+        <PrefiksPodatnika>PL</PrefiksPodatnika>
+        <DaneIdentyfikacyjne>
+            <NIP>4561232</NIP>
+            <Nazwa>Company X</Nazwa>
+        </DaneIdentyfikacyjne>
+        <Adres>
+            <KodKraju>PL</KodKraju>
+            <AdresL1>Some address 1</AdresL1>
+        </Adres>
+    </Podmiot1>
+    <Podmiot2>
+        <DaneIdentyfikacyjne>
+            <NIP>4561233</NIP>
+            <Nazwa>Company Y</Nazwa>
+        </DaneIdentyfikacyjne>
+        <Adres>
+            <KodKraju>PL</KodKraju>
+            <AdresL1>Some address 2</AdresL1>
+        </Adres>
+        <JST>2</JST>
+        <GV>2</GV>
+    </Podmiot2>
+    <Fa>
+        <KodWaluty>PLN</KodWaluty>
+        <P_1>2025-11-24</P_1>
+        <P_1M>Gliwice</P_1M>
+        <P_2>420/P/10/2137</P_2>
+        <P_6>2025-11-27</P_6>
+        <P_13_1>1486.18</P_13_1>
+        <P_14_1>341.82</P_14_1>
+        <P_15>1828</P_15>
+        <Adnotacje>
+            <P_16>1</P_16>
+            <P_17>2</P_17>
+            <P_18>2</P_18>
+            <P_18A>2</P_18A>
+            <Zwolnienie>
+                <P_19N>1</P_19N>
+            </Zwolnienie>
+            <NoweSrodkiTransportu>
+                <P_22N>1</P_22N>
+            </NoweSrodkiTransportu>
+            <P_23>2</P_23>
+            <PMarzy>
+                <P_PMarzyN>1</P_PMarzyN>
+            </PMarzy>
+        </Adnotacje>
+        <RodzajFaktury>VAT</RodzajFaktury>
+        <DodatkowyOpis>
+            <NrWiersza>1</NrWiersza>
+            <Klucz>Opis</Klucz>
+            <Wartosc>Painkillers</Wartosc>
+        </DodatkowyOpis>
+        <FaWiersz>
+            <NrWierszaFa>1</NrWierszaFa>
+            <P_7>Painkillers</P_7>
+            <P_8A>1</P_8A>
+            <P_8B>200</P_8B>
+            <P_9B>8.39</P_9B>
+            <P_11A>1678</P_11A>
+            <P_12>23</P_12>
+        </FaWiersz>
+        <FaWiersz>
+            <NrWierszaFa>2</NrWierszaFa>
+            <P_7>3D Printing - Ball</P_7>
+            <P_8A>1</P_8A>
+            <P_8B>10</P_8B>
+            <P_9B>15</P_9B>
+            <P_11A>150</P_11A>
+            <P_12>23</P_12>
+        </FaWiersz>
+        <Platnosc>
+            <Zaplacono>1</Zaplacono>
+            <DataZaplaty>2025-11-24</DataZaplaty>
+            <FormaPlatnosci>2</FormaPlatnosci>
+        </Platnosc>
+    </Fa>
+</Faktura>
