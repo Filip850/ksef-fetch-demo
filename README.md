@@ -21,3 +21,14 @@ You can also see that the `@PostConstruct` in **Example No. 1** is **commented o
 Before running it, you should first create `test.xml`, which will provide the invoice **XML** object:
 `ksefprocessdemo\src\main\java\pl\pbs\edu\ksefprocessdemo\demo\test.xml`
 
+## 2. First run
+
+Before running the project for the first time, you need to generate the JAXB classes from the FA3 XSD schema.  
+A custom `generateJaxb` task is included in the `build.gradle` file for this purpose.
+
+**Run the following command before the first build:**
+
+```terminaloutput
+./gradlew generateJaxb build
+```
+

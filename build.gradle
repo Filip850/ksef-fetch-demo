@@ -36,6 +36,8 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     xjc 'org.glassfish.jaxb:jaxb-xjc:4.0.2'
+    xjc 'org.glassfish.jaxb:jaxb-runtime:4.0.2'
+
 
 
     //  KSeF Lib Dependencies
@@ -56,8 +58,8 @@ tasks.named('test') {
 
 def xjcOutDir = layout.buildDirectory.dir("generated-sources/xjc").get().asFile
 sourceSets.main.java.srcDir xjcOutDir
-tasks.register('generateJaxb', JavaExec) {
-    mainClass.set('com.sun.tools.xjc.XJCFacade')
+tasks.register('generateJaxb', JavaExec as Class<Task>) {
+    mainClass.set('com.sun.tools.xjc.Driver')
     classpath = configurations.xjc
 
     doFirst { xjcOutDir.mkdirs() }
@@ -70,7 +72,7 @@ tasks.register('generateJaxb', JavaExec) {
             '-XautoNameResolution'
     ]
 
-    // tutaj ustawiamy limit dla parsera
+// Increased limits for the XML parser (FA3 XSD is very large):
     jvmArgs = ['-Xmx4g', '-XX:MaxMetaspaceSize=1g', '-Djdk.xml.maxOccurLimit=100000']
 }
 
