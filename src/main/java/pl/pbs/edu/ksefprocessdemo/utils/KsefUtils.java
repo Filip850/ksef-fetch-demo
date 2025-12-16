@@ -9,6 +9,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public class KsefUtils {
@@ -35,5 +36,9 @@ public class KsefUtils {
     }
 
     return baos.toByteArray();
+  }
+
+  public static String readKsefIdFromFileName(ZipEntry entry) {
+    return entry.getName().substring(0, entry.getName().lastIndexOf("."));
   }
 }

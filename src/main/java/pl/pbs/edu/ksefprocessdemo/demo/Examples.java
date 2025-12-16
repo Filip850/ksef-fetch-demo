@@ -13,18 +13,19 @@ import pl.akmf.ksef.sdk.client.model.session.EncryptionData;
 import pl.akmf.ksef.sdk.client.model.session.EncryptionInfo;
 import pl.pbs.edu.ksefprocessdemo.auth.KsefAuthorizationProvider;
 import pl.pbs.edu.ksefprocessdemo.generated.Faktura;
+import pl.pbs.edu.ksefprocessdemo.model.KsefInvoice;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import static pl.pbs.edu.ksefprocessdemo.utils.KsefUtils.readZipEntry;
-import static pl.pbs.edu.ksefprocessdemo.utils.KsefUtils.unwrapInvoice;
+import static pl.pbs.edu.ksefprocessdemo.utils.KsefUtils.*;
 
 @Service
 @Slf4j
@@ -138,7 +139,7 @@ public class Examples {
       }
 
       byte[] fullZip = outputStream.toByteArray();
-
+      List<KsefInvoice> invoices = new ArrayList<>();
       try (ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(fullZip))) {
         ZipEntry entry;
         while ((entry = zis.getNextEntry()) != null) {
@@ -147,17 +148,32 @@ public class Examples {
             byte[] xmlFile = readZipEntry(zis);
             Faktura invoice = unwrapInvoice(xmlFile);
 
-            log.info("========================");
-            log.info(invoice.getPodmiot1().getDaneIdentyfikacyjne().getNazwa());
-            log.info("sprzedał pewny towar do:");
-            log.info(invoice.getPodmiot2().getDaneIdentyfikacyjne().getNazwa());
-            log.info("========================");
-
+            invoices.add(new KsefInvoice(readKsefIdFromFileName(entry), invoice));
           }
         }
       } catch (JAXBException e) {
         throw new RuntimeException(e);
       }
+      invoices.forEach(invoice -> {
+        log.info("=======FAKTURA START==============");
+        log.info("KSeF ID Number: {}", invoice.getKsefId());
+        log.info(invoice.getInvoiceData().getPodmiot1().getDaneIdentyfikacyjne().getNazwa());
+        log.info("Sprzedał towar X do.:");
+        log.info(invoice.getInvoiceData().getPodmiot2().getDaneIdentyfikacyjne().getNazwa());
+        if (invoice.getInvoiceData().getPodmiot3() != null && !invoice.getInvoiceData().getPodmiot3().isEmpty()) {
+          log.info("PODMIOT 3:");
+          invoice
+              .getInvoiceData()
+              .getPodmiot3()
+              .forEach(podmiot3 -> log.info(podmiot3.getDaneIdentyfikacyjne().getNazwa()));
+          log.info("PODMIOt 3 - END");
+        }
+        log.info("========FAKTURA END===============");
+        log.info("");
+        log.info("");
+        log.info("");
+      });
+
     }
   }
 
