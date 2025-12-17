@@ -12,6 +12,7 @@ import pl.akmf.ksef.sdk.client.model.session.EncryptionInfo;
 import pl.pbs.edu.ksefprocessdemo.auth.KsefAuthorizationProvider;
 import pl.pbs.edu.ksefprocessdemo.exception.KsefPackagePoolException;
 import pl.pbs.edu.ksefprocessdemo.model.KsefInvoice;
+import pl.pbs.edu.ksefprocessdemo.utils.KsefPayloadProcessor;
 
 import java.time.OffsetDateTime;
 import java.util.HashSet;
@@ -24,12 +25,24 @@ public class KsefIntegrationService {
   private final DefaultCryptographyService defaultCryptographyService;
   private final KsefAuthorizationProvider kap;
   private final KSeFClient ksefClient;
+  private final KsefPayloadProcessor ksefPayloadProcessor;
 
   public KsefIntegrationService(DefaultCryptographyService defaultCryptographyService,
-                                KsefAuthorizationProvider kap, KSeFClient ksefClient) {
+                                KsefAuthorizationProvider kap, KSeFClient ksefClient,
+                                KsefPayloadProcessor ksefPayloadProcessor
+  ) {
     this.defaultCryptographyService = defaultCryptographyService;
     this.kap = kap;
     this.ksefClient = ksefClient;
+    this.ksefPayloadProcessor = ksefPayloadProcessor;
+  }
+
+  public Set<KsefInvoice> fetchInvoicePackageBetween(OffsetDateTime dateFrom, OffsetDateTime dateTo){
+    try{
+      return fetchInvoicePackageRecursive(dateFrom, dateTo);
+    } catch (ApiException e) {
+      throw new RuntimeException(e);
+    }
   }
 
 
@@ -54,21 +67,20 @@ public class KsefIntegrationService {
             encryptionData.encryptionInfo().getInitializationVector()
         ), filters
     );
-    InitAsyncInvoicesQueryResponse response = ksefClient.initAsyncQueryInvoice(
-        request,
-        kap.getTokens().getAccessToken().getToken()
-    );
+      InitAsyncInvoicesQueryResponse response = ksefClient.initAsyncQueryInvoice(
+          request,
+          kap.getTokens().getAccessToken().getToken()
+      );
       InvoiceExportStatus exportStatus = poolUntilPackageReady(response.getReferenceNumber());
 
 
 
 
     log.info("[EXAMPLE] Invoice pooling ended with status code: {}", exportStatus.getStatus().getCode());
-
-    if (exportStatus.getPackageParts().getIsTruncated())
+    // Because 10k invoices is limit before truncated, I will parse payload recursively too.
+    if (exportStatus.getPackageParts().getIsTruncated()) // Set will make sure it's unique.
       invoices.addAll(fetchInvoicePackageRecursive(exportStatus.getPackageParts().getLastPermanentStorageDate(), dateTo));
-
-    //TODO: add  processed invoices from actual iter to Set.
+    invoices.addAll(ksefPayloadProcessor.parseKsefPayload(exportStatus, encryptionData));
 
     return invoices;
   }
