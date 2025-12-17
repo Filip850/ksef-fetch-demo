@@ -50,8 +50,7 @@ public class KsefIntegrationService {
     Set<KsefInvoice> invoices = new HashSet<>();
 
 
-    log.info("[EXAMPLE] Getting invoice package...");
-    EncryptionData encryptionData = defaultCryptographyService.getEncryptionData();
+     EncryptionData encryptionData = defaultCryptographyService.getEncryptionData();
     InvoiceExportFilters filters = new InvoicesAsyncQueryFiltersBuilder()
         .withSubjectType(InvoiceQuerySubjectType.SUBJECT2)
         .withDateRange(new InvoiceQueryDateRange(
@@ -75,9 +74,7 @@ public class KsefIntegrationService {
 
 
 
-
-    log.info("[EXAMPLE] Invoice pooling ended with status code: {}", exportStatus.getStatus().getCode());
-    // Because 10k invoices is limit before truncated, I will parse payload recursively too.
+      // Because 10k invoices is limit before truncated, I will parse payload recursively too.
     if (exportStatus.getPackageParts().getIsTruncated()) // Set will make sure it's unique.
       invoices.addAll(fetchInvoicePackageRecursive(exportStatus.getPackageParts().getLastPermanentStorageDate(), dateTo));
     invoices.addAll(ksefPayloadProcessor.parseKsefPayload(exportStatus, encryptionData));
@@ -87,7 +84,7 @@ public class KsefIntegrationService {
 
 
   private InvoiceExportStatus poolUntilPackageReady(String referenceNumber) throws KsefPackagePoolException {
-    log.info("[EXAMPLE] Pooling starts...");
+    log.debug("Package pooling starts...");
     try {
       InvoiceExportStatus exportStatus;
 
@@ -96,7 +93,7 @@ public class KsefIntegrationService {
             referenceNumber,
             kap.getTokens().getAccessToken().getToken()
         );
-        log.info("[EXAMPLE] Actual status code: {}", exportStatus.getStatus().getCode());
+        log.debug("[POOLING] Actual status code: {}", exportStatus.getStatus().getCode());
         Thread.sleep(1000);
       } while (exportStatus.getStatus().getCode() == 100);
       if (exportStatus.getStatus().getCode() != 200) throw new KsefPackagePoolException(exportStatus);

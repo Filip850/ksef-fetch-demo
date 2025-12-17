@@ -15,7 +15,6 @@ import pl.pbs.edu.ksefprocessdemo.model.KsefInvoice;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -37,7 +36,7 @@ public class KsefPayloadProcessor {
   }
 
   public Set<KsefInvoice> parseKsefPayload(InvoiceExportStatus exportStatus, EncryptionData encryptionData) {
-    log.info("[EXAMPLE] Faktur wewnątrz paczki: {}", exportStatus.getPackageParts().getInvoiceCount());
+    log.debug("Number of invoices inside of downloaded package: {}", exportStatus.getPackageParts().getInvoiceCount());
     byte[] fullZip = getDecryptedZipFile(exportStatus, encryptionData);
 
     Set<KsefInvoice> invoices = new HashSet<>();
