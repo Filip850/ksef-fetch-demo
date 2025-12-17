@@ -44,7 +44,7 @@ public class KsefPayloadProcessor {
       ZipEntry entry;
       while ((entry = zis.getNextEntry()) != null) {
         if(entry.getName().toLowerCase().endsWith(".xml")) {
-          System.out.println("File: " + entry.getName());
+         log.debug("File: {}", entry.getName());
           byte[] xmlFile = readZipEntry(zis);
           Faktura invoice = unwrapInvoice(xmlFile);
 
