@@ -4,27 +4,19 @@ import jakarta.annotation.PostConstruct;
 import jakarta.xml.bind.JAXBException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import pl.akmf.ksef.sdk.api.builders.invoices.InvoicesAsyncQueryFiltersBuilder;
-import pl.akmf.ksef.sdk.api.services.DefaultCryptographyService;
 import pl.akmf.ksef.sdk.client.interfaces.KSeFClient;
 import pl.akmf.ksef.sdk.client.model.ApiException;
-import pl.akmf.ksef.sdk.client.model.invoice.*;
-import pl.akmf.ksef.sdk.client.model.session.EncryptionData;
-import pl.akmf.ksef.sdk.client.model.session.EncryptionInfo;
+
 import pl.pbs.edu.ksefprocessdemo.auth.KsefAuthorizationProvider;
 import pl.pbs.edu.ksefprocessdemo.generated.Faktura;
+import pl.pbs.edu.ksefprocessdemo.model.KsefInvoice;
+import pl.pbs.edu.ksefprocessdemo.service.KsefIntegrationService;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
 import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+import java.util.Set;
 
-import static pl.pbs.edu.ksefprocessdemo.utils.KsefUtils.readZipEntry;
-import static pl.pbs.edu.ksefprocessdemo.utils.KsefUtils.unwrapInvoice;
+import static pl.pbs.edu.ksefprocessdemo.utils.KsefUtils.*;
 
 @Service
 @Slf4j
@@ -33,16 +25,16 @@ public class Examples {
 
   private final KSeFClient ksefClient;
   private final KsefAuthorizationProvider kap;
-  private final DefaultCryptographyService defaultCryptographyService;
+  private final KsefIntegrationService ksefIntegrationService;
 
   public Examples(
       KSeFClient ksefClient,
       KsefAuthorizationProvider ksefAuthorizationProvider,
-      DefaultCryptographyService defaultCryptographyService
+      KsefIntegrationService ksefIntegrationService
   ) {
     this.ksefClient = ksefClient;
     this.kap = ksefAuthorizationProvider;
-    this.defaultCryptographyService = defaultCryptographyService;
+    this.ksefIntegrationService = ksefIntegrationService;
   }
 
   // Example No. 1 - File Extraction
@@ -68,97 +60,37 @@ public class Examples {
 
   // Example No. 2 - API package download call
   @PostConstruct
-  public void handleInvoicePackage() throws IOException, InterruptedException, ApiException {
+  public void handleInvoicePackage(){
     handleInvoicePackage(OffsetDateTime.now().minusYears(1),
         OffsetDateTime.now().plusDays(10));
   }
 
 
-  public void handleInvoicePackage(OffsetDateTime dateFrom, OffsetDateTime dateTo) throws ApiException, InterruptedException, IOException {
-    log.info("[EXAMPLE] Getting invoice package...");
-    EncryptionData encryptionData = defaultCryptographyService.getEncryptionData();
-    InvoiceExportFilters filters = new InvoicesAsyncQueryFiltersBuilder()
-        .withSubjectType(InvoiceQuerySubjectType.SUBJECT2)
-        .withDateRange(new InvoiceQueryDateRange(
-            InvoiceQueryDateType.INVOICING,
-            dateFrom,
-            dateTo
-        ))
-        .build();
+  public void handleInvoicePackage(OffsetDateTime dateFrom, OffsetDateTime dateTo) {
+    log.info("[EXAMPLE] Processing package of invoices...");
 
-    InvoiceExportRequest request = new InvoiceExportRequest(
-        new EncryptionInfo(
-            encryptionData.encryptionInfo().getEncryptedSymmetricKey(),
-            encryptionData.encryptionInfo().getInitializationVector()
-        ), filters
-    );
-    InitAsyncInvoicesQueryResponse response = ksefClient.initAsyncQueryInvoice(
-        request,
-        kap.getTokens().getAccessToken().getToken()
-    );
-    InvoiceExportStatus exportStatus;
-    log.info("[EXAMPLE] Pooling starts...");
-    do {
-      exportStatus = ksefClient.checkStatusAsyncQueryInvoice(
-          response.getReferenceNumber(),
-          kap.getTokens().getAccessToken().getToken()
-      );
-      log.info("[EXAMPLE] Actual status code: {}", exportStatus.getStatus().getCode());
-      Thread.sleep(1000);
-    } while (exportStatus.getStatus().getCode() == 100);
-    log.info("[EXAMPLE] Invoice pooling ended with status code: {}", exportStatus.getStatus().getCode());
-
-//    ============================================================================================================
-    //TODO: Paczka może mieć flagę isTruncated i wtedy trzeba pobrać kolejne faktury na podstawie dat
-    //      exportStatus.getPackageParts().getLastPermanentStorageDate() to data ostatniej faktury w paczki,
-    //      Kontynuujemy więc dalej od danej daty :> SEE (Obsługa obciętych paczek (IsTruncated)) https://github.com/CIRFMF/ksef-docs/blob/main/pobieranie-faktur/przyrostowe-pobieranie-faktur.md
-    if (exportStatus.getPackageParts().getIsTruncated())
-      handleInvoicePackage(exportStatus.getPackageParts().getLastPermanentStorageDate(), dateTo);
-
-//    ============================================================================================================
-    if (exportStatus.getStatus().getCode() == 200) {
-      log.info("[EXAMPLE] Faktur wewnątrz paczki: {}", exportStatus.getPackageParts().getInvoiceCount());
-      InvoiceExportPackage packages = exportStatus.getPackageParts();
-      List<InvoicePackagePart> partUrls = packages.getParts();
-      List<byte[]> parts = partUrls.stream().map(ksefClient::downloadPackagePart).toList();
-
-      List<byte[]> decrypted = parts
-          .stream()
-          .map(part -> defaultCryptographyService.decryptBytesWithAes256(
-              part,
-              encryptionData.cipherKey(),
-              encryptionData.cipherIv()
-          ))
-          .toList();
-
-      ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-
-      for (byte[] part : decrypted) {
-        outputStream.write(part);
-      }
-
-      byte[] fullZip = outputStream.toByteArray();
-
-      try (ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(fullZip))) {
-        ZipEntry entry;
-        while ((entry = zis.getNextEntry()) != null) {
-          if(entry.getName().toLowerCase().endsWith(".xml")) {
-            System.out.println("File: " + entry.getName());
-            byte[] xmlFile = readZipEntry(zis);
-            Faktura invoice = unwrapInvoice(xmlFile);
-
-            log.info("========================");
-            log.info(invoice.getPodmiot1().getDaneIdentyfikacyjne().getNazwa());
-            log.info("sprzedał pewny towar do:");
-            log.info(invoice.getPodmiot2().getDaneIdentyfikacyjne().getNazwa());
-            log.info("========================");
-
-          }
+      Set<KsefInvoice> invoices = ksefIntegrationService.fetchInvoicePackageBetween(dateFrom, dateTo);
+      invoices.forEach(invoice -> {
+        log.info("=======FAKTURA START==============");
+        log.info("KSeF ID Number: {}", invoice.getKsefId());
+        log.info(invoice.getInvoiceData().getPodmiot1().getDaneIdentyfikacyjne().getNazwa());
+        log.info("Sprzedał towar X do.:");
+        log.info(invoice.getInvoiceData().getPodmiot2().getDaneIdentyfikacyjne().getNazwa());
+        if (invoice.getInvoiceData().getPodmiot3() != null && !invoice.getInvoiceData().getPodmiot3().isEmpty()) {
+          log.info("PODMIOT 3:");
+          invoice
+              .getInvoiceData()
+              .getPodmiot3()
+              .forEach(podmiot3 -> log.info(podmiot3.getDaneIdentyfikacyjne().getNazwa()));
+          log.info("PODMIOT 3 - END");
         }
-      } catch (JAXBException e) {
-        throw new RuntimeException(e);
-      }
+        log.info("========FAKTURA END===============");
+        log.info("");
+        log.info("");
+        log.info("");
+      });
+
     }
-  }
+
 
 }
