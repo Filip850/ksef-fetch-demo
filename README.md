@@ -53,15 +53,3 @@ I hope this code helps someone better understand the assumptions behind the **ks
 
 Due to the nature of the use cases, this code will be used as a base. Further generations and development will take place in a private repository and **will not be publicly accessible**.  
 As a result, all business logic has been intentionally excluded from this repository.
-
-## 2. First run
-
-Before running the project for the first time, you need to generate the JAXB classes from the FA3 XSD schema.  
-A custom `generateJaxb` task is included in the `build.gradle` file for this purpose.
-
-**Run the following command before the first build:**
-
-```terminaloutput
-./gradlew generateJaxb build
-```
-
