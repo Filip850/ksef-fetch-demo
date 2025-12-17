@@ -19,7 +19,40 @@ For the proper workflow of this examples, you need to create a `src\main\resourc
 
 You can also see that the `@PostConstruct` in **Example No. 1** is **commented out**.
 Before running it, you should first create `test.xml`, which will provide the invoice **XML** object:
-`ksefprocessdemo\src\main\java\pl\pbs\edu\ksefprocessdemo\demo\test.xml`
+`ksefprocessdemo\src\main\java\pl\pbs\edu\ksefprocessdemo\demo\test.xml` (i've made mock.xml for now and it is uncommented :> File has some Lorem Ipsum data)
+
+## 2. First run
+
+Before running the project for the first time, you need to generate the JAXB classes from the FA3 XSD schema.  
+A custom `generateJaxb` task is included in the `build.gradle` file for this purpose.
+
+**Run the following command before the first build:**
+
+```terminaloutput
+./gradlew generateJaxb build
+```
+
+## 3. Classes Containing the Core Logic
+
+If you want to understand how the provided examples work, please review the following classes:
+
+- **Authentication logic:**
+    - `auth/KsefAuthorizationProvider.java`
+    - `config/*.java`
+
+- **Data retrieval logic:**
+    - `service/KsefIntegrationService.java`
+    - `utils/KsefPayloadProcessor.java`
+    - `utils/KsefUtils.java`
+
+- **Use cases and examples:**
+    - `demo/Examples.java`
+
+## 4. Final Notes
+I hope this code helps someone better understand the assumptions behind the **ksef-client** library for Java.
+
+Due to the nature of the use cases, this code will be used as a base. Further generations and development will take place in a private repository and **will not be publicly accessible**.  
+As a result, all business logic has been intentionally excluded from this repository.
 
 ## 2. First run
 
