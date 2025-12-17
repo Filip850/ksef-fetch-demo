@@ -4,28 +4,17 @@ import jakarta.annotation.PostConstruct;
 import jakarta.xml.bind.JAXBException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import pl.akmf.ksef.sdk.api.builders.invoices.InvoicesAsyncQueryFiltersBuilder;
-import pl.akmf.ksef.sdk.api.services.DefaultCryptographyService;
 import pl.akmf.ksef.sdk.client.interfaces.KSeFClient;
 import pl.akmf.ksef.sdk.client.model.ApiException;
-import pl.akmf.ksef.sdk.client.model.invoice.*;
-import pl.akmf.ksef.sdk.client.model.session.EncryptionData;
-import pl.akmf.ksef.sdk.client.model.session.EncryptionInfo;
+
 import pl.pbs.edu.ksefprocessdemo.auth.KsefAuthorizationProvider;
 import pl.pbs.edu.ksefprocessdemo.generated.Faktura;
 import pl.pbs.edu.ksefprocessdemo.model.KsefInvoice;
 import pl.pbs.edu.ksefprocessdemo.service.KsefIntegrationService;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 import static pl.pbs.edu.ksefprocessdemo.utils.KsefUtils.*;
 
@@ -36,18 +25,15 @@ public class Examples {
 
   private final KSeFClient ksefClient;
   private final KsefAuthorizationProvider kap;
-  private final DefaultCryptographyService defaultCryptographyService;
   private final KsefIntegrationService ksefIntegrationService;
 
   public Examples(
       KSeFClient ksefClient,
       KsefAuthorizationProvider ksefAuthorizationProvider,
-      DefaultCryptographyService defaultCryptographyService,
       KsefIntegrationService ksefIntegrationService
   ) {
     this.ksefClient = ksefClient;
     this.kap = ksefAuthorizationProvider;
-    this.defaultCryptographyService = defaultCryptographyService;
     this.ksefIntegrationService = ksefIntegrationService;
   }
 
@@ -81,6 +67,7 @@ public class Examples {
 
 
   public void handleInvoicePackage(OffsetDateTime dateFrom, OffsetDateTime dateTo) {
+    log.info("[EXAMPLE] Processing package of invoices...");
 
       Set<KsefInvoice> invoices = ksefIntegrationService.fetchInvoicePackageBetween(dateFrom, dateTo);
       invoices.forEach(invoice -> {
@@ -95,7 +82,7 @@ public class Examples {
               .getInvoiceData()
               .getPodmiot3()
               .forEach(podmiot3 -> log.info(podmiot3.getDaneIdentyfikacyjne().getNazwa()));
-          log.info("PODMIOt 3 - END");
+          log.info("PODMIOT 3 - END");
         }
         log.info("========FAKTURA END===============");
         log.info("");
